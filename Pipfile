@@ -6,6 +6,10 @@ name = "pypi"
 [packages]
 flask = "*"
 gunicorn = "*"
+flask-jwt-extended = "*"
+flask-pymongo = "*"
+bcrypt = "*"
+pymongo = {extras = ["srv"], version = "*"}
 
 [dev-packages]
 
