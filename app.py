@@ -23,8 +23,6 @@ def index():
     return "Welcome to NAAC Documentation Automation System"
 
 # register and login start ###################################################################################
-
-
 @app.route(baseUrl+"/auth/register/", methods=["POST"])
 def register_user():
     try:
