@@ -15,7 +15,7 @@ app = Flask(__name__)
 CORS(app)
 
 app.secret_key = "blinsia"
-app.config['MONGO_URI'] = "mongodb://localhost:27017/spm"
+app.config['MONGO_URI'] = "mongodb+srv://spm:spm@spm.hcqrx.mongodb.net/SPM?retryWrites=true&w=majority"
 mongo = PyMongo(app)
 #mongodb+srv://spm:spm@spm.hcqrx.mongodb.net/SPM?retryWrites=true&w=majority
 #mongodb://localhost:27017/spm
