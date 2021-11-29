@@ -87,7 +87,7 @@ def createfile():
         _createdOn = datetime.now()
         #_formdetails = _json["formdetails"]
 
-        if _name and _path and _description and _type and _createdOn and request.method == "POST":
+        if _name and _path and _description and _type and _createdOn and request.method == "PUT":
             result = mongo.db.files.insert_one(
                 {"name":_name,"path":_path,"description":_description,"type":_type,"createdOn":_createdOn})
             return response_message.get_success_response("Inserted suceessfully")
@@ -105,7 +105,7 @@ def editfile():
         _fileId = _json["id"]
         _editData = _json["editData"]
 
-        if _fileId and _editData and request.method == "POST":
+        if _fileId and _editData and request.method == "PUT":
             result = mongo.db.files.update({"_id":ObjectId(_fileId)},{"$set":_editData})
             
             return response_message.get_success_response("Updated suceessfully")
@@ -122,7 +122,7 @@ def deletefile():
         _json = request.json
         _fileId = _json["id"]
 
-        if _fileId and request.method == "POST":
+        if _fileId and request.method == "DELETE":
             result = mongo.db.files.delete_one({"_id":ObjectId(_fileId)})
             
             return response_message.get_success_response("Deleted suceessfully")
