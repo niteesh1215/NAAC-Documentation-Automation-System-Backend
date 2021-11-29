@@ -7,7 +7,7 @@ def get_success_response(data: any, status_code=200) -> Response:
         'status': 'success',
         'data': data
     })
-    resp.status_code = status_code = 200
+    resp.status_code = status_code 
     return resp
 
 
