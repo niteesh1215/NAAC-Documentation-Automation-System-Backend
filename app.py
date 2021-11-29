@@ -6,11 +6,13 @@ from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
 import response_message
 from datetime import datetime
-
+from flask_cors import CORS
 
 baseUrl = "/api/v1"
 
 app = Flask(__name__)
+
+CORS(app)
 
 app.secret_key = "blinsia"
 app.config['MONGO_URI'] = "mongodb+srv://spm:spm@spm.hcqrx.mongodb.net/SPM?retryWrites=true&w=majority"
