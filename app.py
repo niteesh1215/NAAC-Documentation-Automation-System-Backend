@@ -6,11 +6,13 @@ from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
 import response_message
 from datetime import datetime
-
+from flask_cors import CORS
 
 baseUrl = "/api/v1"
 
 app = Flask(__name__)
+
+CORS(app)
 
 app.secret_key = "blinsia"
 app.config['MONGO_URI'] = "mongodb://localhost:27017/spm"
@@ -30,9 +32,9 @@ def register_user():
         _name = _json["name"]
         _email = _json["email"]
         _pwd = _json['pwd']
+
         if _name and _email and _pwd and request.method == "POST":
             _hashed_pwd = generate_password_hash(_pwd)
-
             result = mongo.db.user.insert_one(
                 {'name': _name, 'email': _email, 'pwd': _hashed_pwd})
 
@@ -118,7 +120,6 @@ def editfile():
 
         if _fileId and _editData and request.method == "PUT":
             result = mongo.db.files.update({"_id":ObjectId(_fileId)},{"$set":_editData})
-            
             return response_message.get_success_response("Updated suceessfully")
         else:
             return response_message.get_failed_response("Failed")
