@@ -94,10 +94,8 @@ def createfile():
         if "formDetails" in _json:
             _formDetails = _json["formDetails"]
 
-
         if _type == "FORM":
             if _formDetails:
-                print('inside form')
                 try:
                     formId = mongo.db.forms.insert_one(_formDetails)
                     convertedFormId = json.loads(
@@ -111,11 +109,8 @@ def createfile():
                     return response_message.get_failed_response("Error while inserting form")
             else:
                 return response_message.get_failed_response("Failed in inserting form")
-        
-        print('hi')
 
         if _name and _path and _description and _type and _createdOn and request.method == "PUT":
-            print('bye')
 
             result = mongo.db.files.insert_one(
                 {"name": _name, "path": _path, "description": _description, "type": _type, "createdOn": _createdOn})
