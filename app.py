@@ -160,13 +160,13 @@ def deletefile():
         return response_message.get_failed_response("An error occured")
 
 
-@app.route(baseUrl+"/files/retrieve", methods=["GET"])
+@app.route(baseUrl+"/files/retrieve", methods=["POST"])
 def retrieve():
     try:
         _json = request.json
         _path = _json["path"]
 
-        if _path and request.method == "GET":
+        if _path and request.method == "POST":
             result = mongo.db.files.find({"path": _path})
 
             return response_message.get_success_response(json.loads(dumps(result)))
