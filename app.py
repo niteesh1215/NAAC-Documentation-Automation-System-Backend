@@ -91,8 +91,8 @@ def createfile():
         _type = _json["type"]
         _createdOn = datetime.now()
 
-        _formDetails = _json["formDetails"] if _json.has_key(
-            "formDetails") else None
+        if "formDetails" in _json:
+            _formDetails = _json["formDetails"]
 
         if _type == "FORM":
             if _formDetails:
@@ -101,7 +101,7 @@ def createfile():
                     convertedFormId = json.loads(
                         dumps(formId.inserted_id))['$oid']
                     if _name and _path and _description and _type and _createdOn and formId and request.method == "PUT":
-                        result = mongo.db.files.insert_one(
+                        result = mongo.db.forms.insert_one(
                             {"name": _name, "path": _path, "description": _description, "type": _type, "createdOn": _createdOn, "formId": convertedFormId})
                         return response_message.get_success_response("Form inserted suceessfully")
                 except:
