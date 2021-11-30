@@ -89,7 +89,7 @@ def createfile():
         _path = _json["path"]
         _description = _json["description"]
         _type = _json["type"]
-        _createdOn = datetime.now()
+        _createdOn = _json["createdOn"]
 
         if "formDetails" in _json:
             _formDetails = _json["formDetails"]
