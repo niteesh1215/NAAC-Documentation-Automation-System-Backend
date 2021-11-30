@@ -6,6 +6,8 @@ import json
 from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
 import response_message
+import schedule
+import time
 
 baseUrl = "/api/v1"
 
@@ -82,13 +84,13 @@ def user_response():
     try:
         _json = request.json
         _submittedOn = _json['submittedOn']
-        _form_id = _json['form_id']
+        _formId = _json['formId']
         _email = _json['email']
-        _response_data = _json['response_data']
-        _response_group_id = _json['response_group_id']
-        if _submittedOn and _form_id and _email and _response_data and _response_group_id and request.method == "POST":
+        _responseData = _json['responseData']
+        _responseGroupId = _json['responseGroupId']
+        if _submittedOn and _formId and _email and _responseData and _responseGroupId and request.method == "POST":
             result = mongo.db.responses.insert_one(
-                {'submittedOn': _submittedOn, 'form_id': _form_id, 'email': _email, 'response_data': _response_data, 'response_group_id': _response_group_id})
+                {'submittedOn': _submittedOn, 'formId': _formId, 'email': _email, 'responseData': _responseData, 'responseGroupId': _responseGroupId})
 
             print(result.__doc__)
 
@@ -101,6 +103,31 @@ def user_response():
             return response_message.get_failed_response("Email id exists")
         else:
             return response_message.get_failed_response("An error occured")
+
+
+@app.route(baseUrl+"/form/response/retrieve", methods=["GET"])
+def retrieve_response():
+    try:
+
+        _json = request.json
+        _formId = _json['formId']
+        _responseGroupId = _json['responseGroupId']
+        if _formId and _responseGroupId and request.method == "GET":
+            form = mongo.db.responses.find(
+                {'formId': _formId, 'responseGroupId': _responseGroupId})
+            return response_message.get_success_response(json.loads(dumps(form)))
+        elif _formId and request.method == "GET":
+            form = mongo.db.responses.find({'formId': _formId})
+            return response_message.get_success_response(json.loads(dumps(form)))
+        elif _responseGroupId and request.method == "GET":
+            form = mongo.db.responses.find(
+                {'responseGroupId': _responseGroupId})
+            return response_message.get_success_response(json.loads(dumps(form)))
+        else:
+            return response_message.get_failed_response("An error occured ")
+    except Exception as e:
+        error_message = str(e)
+        return response_message.get_failed_response("An error occured "+error_message)
 
 
 @app.route(baseUrl+"/form/response/delete/<id>", methods=["DELETE"])
@@ -118,15 +145,17 @@ def update_response_data(id):
     try:
         _json = request.json
         _id = id
-        _response_data = _json['response_data']
+        _responseData = _json['responseData']
 
-        if _id and _response_data and request.method == 'PUT':
+        if _id and _responseData and request.method == 'PUT':
             mongo.db.responses.update_one({'_id': ObjectId(_id['$oid']) if'$oid' in _id else ObjectId(
-                _id)}, {'$set': {'response_data': _response_data}})
+                _id)._}, {'$set': {'response_data': _responseData}})
             return response_message.get_success_response("Updated successfully")
     except Exception as e:
         error_message = str(e)
         return response_message.get_failed_response("An error occured "+error_message)
+
+# form responses ###################################################################################
 
 
 @app.route(baseUrl+"/form/add", methods=["POST"])
@@ -141,7 +170,7 @@ def add_form():
         _currentGroupId = _json['currentGroupId']
         if _name and _description and _template and _path and _limitToSingleResponse and _currentGroupId and request.method == "POST":
             result = mongo.db.forms.insert_one(
-                {'name': _name, 'description': _description, 'template': _template, 'path': _path, 'limitToSingleResponse': _limitToSingleResponse, 'currentGroupId': _currentGroupId, 'createdOn': None, 'isActive': None, 'activeFromDate': None, 'activeEndDate': None, 'lastModified': None})
+                {'name': _name, 'description': _description, 'template': _template, 'path': _path, 'limitToSingleResponse': _limitToSingleResponse, 'currentGroupId': _currentGroupId, 'createdOn': None, 'isActive': False, 'activeFromDate': None, 'activeEndDate': None, 'lastModified': None})
 
             print(result.__doc__)
 
@@ -155,6 +184,56 @@ def add_form():
         else:
             return response_message.get_failed_response("An error occured")
 
+
+@app.route(baseUrl+"/form/update/<id>", methods=["PUT"])
+def update_form(id):
+    try:
+        _id = id
+        if _id and request.method == 'PUT':
+            mongo.db.forms.update_one({'_id': ObjectId(_id['$oid']) if'$oid' in _id else ObjectId(
+                _id)}, {'$set': request.json})
+            return response_message.get_success_response("Updated successfully")
+    except Exception as e:
+        error_message = str(e)
+        return response_message.get_failed_response("An error occured "+error_message)
+
+
+@app.route(baseUrl+"/form/retrieve", methods=["GET"])
+def retrieve_form():
+    try:
+        _json = request.json
+        _formId = _json['formId']
+        if _formId and request.method == "GET":
+            form = mongo.db.forms.find_one({'_id': ObjectId(_formId)})
+            return response_message.get_success_response(json.loads(dumps(form)))
+
+    except Exception as e:
+        error_message = str(e)
+        return response_message.get_failed_response("An error occured "+error_message)
+
+# forms ###################################################################################
+
+
+# @app.route(baseUrl+"/form/add-test", methods=["POST"])
+# def add_test():
+#     def job():
+#             print("Inside job")
+#             _json = request.json
+#             _name = _json['name']
+#             print("After name")
+#             if _name and request.method == "POST":
+#                 result = mongo.db.forms.insert_one(
+#                     {'name': _name})
+#                 print(result.__doc__)
+#                 return response_message.get_success_response("Inserted successfully")
+#             else:
+#                 return response_message.get_failed_response("Insertion failed, please provide correct data")
+            
+#     schedule.every().day.at("20:07").do(job)
+#     while True:
+#             schedule.run_pending()
+#             time.sleep(1)
+#         # return response_message.get_failed_response("Failed")
 
 @app.errorhandler(404)
 def not_found(error=None):
