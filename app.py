@@ -1,4 +1,3 @@
-import re
 from flask import Flask, jsonify, request
 from flask_pymongo import PyMongo
 from bson.json_util import default, dumps
@@ -8,40 +7,44 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import response_message
 import schedule
 import time
+from datetime import datetime
+from flask_cors import CORS
 
 baseUrl = "/api/v1"
 
 app = Flask(__name__)
 
+CORS(app)
+
 app.secret_key = "blinsia"
 # app.config['MONGO_URI'] = "mongodb+srv://spm:spm@spm.hcqrx.mongodb.net/SPM?retryWrites=true&w=majority"
 app.config['MONGO_URI'] = "mongodb://127.0.0.1:27017/spm"
 mongo = PyMongo(app)
+# mongodb+srv://spm:spm@spm.hcqrx.mongodb.net/SPM?retryWrites=true&w=majority
+# mongodb://localhost:27017/spm
 
 
 @app.route("/")
 def index():
     return "Welcome to NAAC Documentation Automation System"
 
-# register and login ###################################################################################
+# register and login start ###################################################################################
 
 
-@app.route(baseUrl+"/auth/register", methods=["POST"])
+@app.route(baseUrl+"/auth/register/", methods=["POST"])
 def register_user():
     try:
         _json = request.json
         _name = _json["name"]
         _email = _json["email"]
         _pwd = _json['pwd']
+
         if _name and _email and _pwd and request.method == "POST":
             _hashed_pwd = generate_password_hash(_pwd)
-
             result = mongo.db.user.insert_one(
                 {'name': _name, 'email': _email, 'pwd': _hashed_pwd})
 
-            print(result.__doc__)
-
-            return response_message.get_success_response("Inserted successfully")
+            return response_message.get_success_response("Inserted suceessfully")
         else:
             return response_message.get_failed_response("Insertion failed, please provide correct data")
     except Exception as e:
@@ -76,7 +79,102 @@ def login_user():
         print(e)
         return response_message.get_failed_response("An error occured")
 
-# register and login ###################################################################################
+# register and login End ###################################################################################
+
+# files Start #################################################################################
+
+
+@app.route(baseUrl+"/files/create-file", methods=["PUT"])
+def createfile():
+    try:
+        _json = request.json
+        _name = _json["name"]
+        _path = _json["path"]
+        _description = _json["description"]
+        _type = _json["type"]
+        _createdOn = _json["createdOn"]
+        _formDetails = None
+        if "formDetails" in _json:
+            _formDetails = _json["formDetails"]
+
+        if _type == "FORM":
+            if _formDetails:
+                try:
+                    formId = mongo.db.forms.insert_one(_formDetails)
+                    convertedFormId = json.loads(
+                        dumps(formId.inserted_id))['$oid']
+                    if _name and _path and _description and _type and _createdOn and formId and request.method == "PUT":
+                        result = mongo.db.files.insert_one(
+                            {"name": _name, "path": _path, "description": _description, "type": _type, "createdOn": _createdOn, "formId": convertedFormId})
+                        return response_message.get_success_response("Form inserted suceessfully")
+                except:
+                    result = mongo.db.forms.delete_one({"_id": formId})
+                    return response_message.get_failed_response("Error while inserting form")
+            else:
+                return response_message.get_failed_response("Failed in inserting form")
+
+        if _name and _path and _description and _type and _createdOn and request.method == "PUT":
+
+            result = mongo.db.files.insert_one(
+                {"name": _name, "path": _path, "description": _description, "type": _type, "createdOn": _createdOn})
+            return response_message.get_success_response("Inserted in files suceessfully")
+        else:
+            return response_message.get_failed_response("Failed in inserting file")
+    except Exception as e:
+        print(e)
+        return response_message.get_failed_response("An error occured")
+
+
+@app.route(baseUrl+"/files/edit-file", methods=["PUT"])
+def editfile():
+    try:
+        _json = request.json
+        _fileId = _json["id"]
+        _editData = _json["editData"]
+
+        if _fileId and _editData and request.method == "PUT":
+            result = mongo.db.files.update(
+                {"_id": ObjectId(_fileId)}, {"$set": _editData})
+            return response_message.get_success_response("Updated suceessfully")
+        else:
+            return response_message.get_failed_response("Failed")
+    except Exception as e:
+        print(e)
+        return response_message.get_failed_response("An error occured")
+
+
+@app.route(baseUrl+"/files/delete-file", methods=["DELETE"])
+def deletefile():
+    try:
+        _json = request.json
+        _fileId = _json["id"]
+
+        if _fileId and request.method == "DELETE":
+            result = mongo.db.files.delete_one({"_id": ObjectId(_fileId)})
+
+            return response_message.get_success_response("Deleted suceessfully")
+        else:
+            return response_message.get_failed_response("Failed")
+    except Exception as e:
+        print(e)
+        return response_message.get_failed_response("An error occured")
+
+
+@app.route(baseUrl+"/files/retrieve", methods=["GET"])
+def retrieve():
+    try:
+        _json = request.json
+        _path = _json["path"]
+
+        if _path and request.method == "GET":
+            result = mongo.db.files.find({"path": _path})
+
+            return response_message.get_success_response(json.loads(dumps(result)))
+        else:
+            return response_message.get_failed_response("Failed")
+    except Exception as e:
+        print(e)
+        return response_message.get_failed_response("An error occured")
 
 
 @app.route(baseUrl+"/form/response/add", methods=["POST"])
@@ -146,6 +244,7 @@ def update_response_data(id):
         _json = request.json
         _id = id
         _responseData = _json['responseData']
+# files End #################################################################################
 
         if _id and _responseData and request.method == 'PUT':
             mongo.db.responses.update_one({'_id': ObjectId(_id['$oid']) if'$oid' in _id else ObjectId(
@@ -228,7 +327,7 @@ def retrieve_form():
 #                 return response_message.get_success_response("Inserted successfully")
 #             else:
 #                 return response_message.get_failed_response("Insertion failed, please provide correct data")
-            
+
 #     schedule.every().day.at("20:07").do(job)
 #     while True:
 #             schedule.run_pending()
