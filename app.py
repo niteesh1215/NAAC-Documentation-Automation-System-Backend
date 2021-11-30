@@ -143,11 +143,10 @@ def editfile():
         return response_message.get_failed_response("An error occured")
 
 
-@app.route(baseUrl+"/files/delete-file", methods=["DELETE"])
-def deletefile():
+@app.route(baseUrl+"/files/delete-file/<id>", methods=["DELETE"])
+def deletefile(id):
     try:
-        _json = request.json
-        _fileId = _json["id"]
+        _fileId = id
 
         if _fileId and request.method == "DELETE":
             result = mongo.db.files.delete_one({"_id": ObjectId(_fileId)})
