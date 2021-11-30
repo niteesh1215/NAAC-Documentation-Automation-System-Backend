@@ -296,11 +296,10 @@ def update_form(id):
         return response_message.get_failed_response("An error occured "+error_message)
 
 
-@app.route(baseUrl+"/form/retrieve", methods=["GET"])
-def retrieve_form():
+@app.route(baseUrl+"/form/retrieve/<id>", methods=["GET"])
+def retrieve_form(id):
     try:
-        _json = request.json
-        _formId = _json['formId']
+        _formId = id
         if _formId and request.method == "GET":
             form = mongo.db.forms.find_one({'_id': ObjectId(_formId)})
             return response_message.get_success_response(json.loads(dumps(form)))
