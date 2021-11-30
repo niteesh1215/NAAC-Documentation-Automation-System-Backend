@@ -17,14 +17,17 @@ CORS(app)
 app.secret_key = "blinsia"
 app.config['MONGO_URI'] = "mongodb+srv://spm:spm@spm.hcqrx.mongodb.net/SPM?retryWrites=true&w=majority"
 mongo = PyMongo(app)
-#mongodb+srv://spm:spm@spm.hcqrx.mongodb.net/SPM?retryWrites=true&w=majority
-#mongodb://localhost:27017/spm
+# mongodb+srv://spm:spm@spm.hcqrx.mongodb.net/SPM?retryWrites=true&w=majority
+# mongodb://localhost:27017/spm
+
 
 @app.route("/")
 def index():
     return "Welcome to NAAC Documentation Automation System"
 
 # register and login start ###################################################################################
+
+
 @app.route(baseUrl+"/auth/register/", methods=["POST"])
 def register_user():
     try:
@@ -75,7 +78,9 @@ def login_user():
 
 # register and login End ###################################################################################
 
-# files Start ################################################################################# 
+# files Start #################################################################################
+
+
 @app.route(baseUrl+"/files/create-file", methods=["PUT"])
 def createfile():
     try:
@@ -85,24 +90,29 @@ def createfile():
         _description = _json["description"]
         _type = _json["type"]
         _createdOn = datetime.now()
-        _formDetails = _json["formDetails"]
 
-        if _type  == "FORM":
+        _formDetails = _json["formDetails"] if _json.has_key(
+            "formDetails") else None
+
+        if _type == "FORM":
             if _formDetails:
                 try:
                     formId = mongo.db.forms.insert_one(_formDetails)
-                    convertedFormId = json.loads(dumps(formId.inserted_id))['$oid']
+                    convertedFormId = json.loads(
+                        dumps(formId.inserted_id))['$oid']
                     if _name and _path and _description and _type and _createdOn and formId and request.method == "PUT":
-                        result = mongo.db.files.insert_one({"name":_name,"path":_path,"description":_description,"type":_type,"createdOn":_createdOn, "formId":convertedFormId})
+                        result = mongo.db.files.insert_one(
+                            {"name": _name, "path": _path, "description": _description, "type": _type, "createdOn": _createdOn, "formId": convertedFormId})
                         return response_message.get_success_response("Form inserted suceessfully")
                 except:
-                    result = mongo.db.forms.delete_one({"_id":formId})
+                    result = mongo.db.forms.delete_one({"_id": formId})
                     return response_message.get_failed_response("Error while inserting form")
             else:
                 return response_message.get_failed_response("Failed in inserting form")
 
         if _name and _path and _description and _type and _createdOn and request.method == "PUT":
-            result = mongo.db.files.insert_one({"name":_name,"path":_path,"description":_description,"type":_type,"createdOn":_createdOn})
+            result = mongo.db.files.insert_one(
+                {"name": _name, "path": _path, "description": _description, "type": _type, "createdOn": _createdOn})
             return response_message.get_success_response("Inserted in files suceessfully")
         else:
             return response_message.get_failed_response("Failed in inserting file")
@@ -119,7 +129,8 @@ def editfile():
         _editData = _json["editData"]
 
         if _fileId and _editData and request.method == "PUT":
-            result = mongo.db.files.update({"_id":ObjectId(_fileId)},{"$set":_editData})
+            result = mongo.db.files.update(
+                {"_id": ObjectId(_fileId)}, {"$set": _editData})
             return response_message.get_success_response("Updated suceessfully")
         else:
             return response_message.get_failed_response("Failed")
@@ -135,14 +146,15 @@ def deletefile():
         _fileId = _json["id"]
 
         if _fileId and request.method == "DELETE":
-            result = mongo.db.files.delete_one({"_id":ObjectId(_fileId)})
-            
+            result = mongo.db.files.delete_one({"_id": ObjectId(_fileId)})
+
             return response_message.get_success_response("Deleted suceessfully")
         else:
             return response_message.get_failed_response("Failed")
     except Exception as e:
         print(e)
         return response_message.get_failed_response("An error occured")
+
 
 @app.route(baseUrl+"/files/retrieve", methods=["GET"])
 def retrieve():
@@ -151,8 +163,8 @@ def retrieve():
         _path = _json["path"]
 
         if _path and request.method == "GET":
-            result = mongo.db.files.find({"path":_path})
-            
+            result = mongo.db.files.find({"path": _path})
+
             return response_message.get_success_response(json.loads(dumps(result)))
         else:
             return response_message.get_failed_response("Failed")
@@ -160,7 +172,8 @@ def retrieve():
         print(e)
         return response_message.get_failed_response("An error occured")
 
-# files End ################################################################################# 
+# files End #################################################################################
+
 
 @app.errorhandler(404)
 def not_found(error=None):
