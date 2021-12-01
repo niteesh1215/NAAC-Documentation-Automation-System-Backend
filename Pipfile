@@ -11,6 +11,8 @@ flask-pymongo = "*"
 bcrypt = "*"
 pymongo = {extras = ["srv"], version = "*"}
 flask-cors = "*"
+cors = "*"
+schedule = "*"
 
 [dev-packages]
 

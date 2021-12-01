@@ -7,7 +7,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import response_message
 import schedule
 import time
-from datetime import datetime
+from datetime import datetime, date
+
 from flask_cors import CORS
 
 baseUrl = "/api/v1"
@@ -104,7 +105,7 @@ def createfile():
                     convertedFormId = json.loads(
                         dumps(formId.inserted_id))['$oid']
                     if _name and _path and _description and _type and _createdOn and formId and request.method == "PUT":
-                        result = mongo.db.files.insert_one(
+                        mongo.db.files.insert_one(
                             {"name": _name, "path": _path, "description": _description, "type": _type, "createdOn": _createdOn, "formId": convertedFormId})
                         return response_message.get_success_response("Form inserted suceessfully")
                 except:
@@ -115,7 +116,7 @@ def createfile():
 
         if _name and _path and _description and _type and _createdOn and request.method == "PUT":
 
-            result = mongo.db.files.insert_one(
+            mongo.db.files.insert_one(
                 {"name": _name, "path": _path, "description": _description, "type": _type, "createdOn": _createdOn})
             return response_message.get_success_response("Inserted in files suceessfully")
         else:
@@ -150,7 +151,7 @@ def deletefile():
         _fileId = _json["id"]
 
         if _fileId and request.method == "DELETE":
-            result = mongo.db.files.delete_one({"_id": ObjectId(_fileId)})
+            mongo.db.files.delete_one({"_id": ObjectId(_fileId)})
 
             return response_message.get_success_response("Deleted suceessfully")
         else:
@@ -267,9 +268,11 @@ def add_form():
         _path = _json['path']
         _limitToSingleResponse = _json['limitToSingleResponse']
         _currentGroupId = _json['currentGroupId']
+        _activeEndDate = _json['activeEndDate']
+        _isActive = _json['isActive']
         if _name and _description and _template and _path and _limitToSingleResponse and _currentGroupId and request.method == "POST":
             result = mongo.db.forms.insert_one(
-                {'name': _name, 'description': _description, 'template': _template, 'path': _path, 'limitToSingleResponse': _limitToSingleResponse, 'currentGroupId': _currentGroupId, 'createdOn': None, 'isActive': False, 'activeFromDate': None, 'activeEndDate': None, 'lastModified': None})
+                {'name': _name, 'description': _description, 'template': _template, 'path': _path, 'limitToSingleResponse': _limitToSingleResponse, 'currentGroupId': _currentGroupId, 'createdOn': None, 'isActive': _isActive, 'activeFromDate': None, 'activeEndDate': _activeEndDate, 'lastModified': None})
 
             print(result.__doc__)
 
@@ -313,26 +316,20 @@ def retrieve_form():
 # forms ###################################################################################
 
 
-# @app.route(baseUrl+"/form/add-test", methods=["POST"])
-# def add_test():
-#     def job():
-#             print("Inside job")
-#             _json = request.json
-#             _name = _json['name']
-#             print("After name")
-#             if _name and request.method == "POST":
-#                 result = mongo.db.forms.insert_one(
-#                     {'name': _name})
-#                 print(result.__doc__)
-#                 return response_message.get_success_response("Inserted successfully")
-#             else:
-#                 return response_message.get_failed_response("Insertion failed, please provide correct data")
+@app.route(baseUrl+"/form/add-test", methods=["PUT"])
+def add_test():
+    def job():
+        
+        _today = str(date.today())
+        print(_today)
+        mongo.db.forms.update_one({'activeEndDate':_today},{"$set":{'isActive':False}})
+        return response_message.get_success_response("Updated successfully")
 
-#     schedule.every().day.at("20:07").do(job)
-#     while True:
-#             schedule.run_pending()
-#             time.sleep(1)
-#         # return response_message.get_failed_response("Failed")
+    schedule.every().day.at("22:33").do(job)
+    while True:
+            schedule.run_pending()
+            time.sleep(1)
+        #return response_message.get_failed_response("Failed")
 
 @app.errorhandler(404)
 def not_found(error=None):
