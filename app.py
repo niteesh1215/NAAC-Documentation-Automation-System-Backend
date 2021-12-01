@@ -5,12 +5,10 @@ import json
 from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
 import response_message
-#import schedule
+import schedule
 import time
 from datetime import datetime, date
-
 from flask_cors import CORS
-import schedule
 
 baseUrl = "/api/v1"
 
@@ -106,7 +104,7 @@ def createfile():
                     convertedFormId = json.loads(
                         dumps(formId.inserted_id))['$oid']
                     if _name and _path and _description and _type and _createdOn and formId and request.method == "PUT":
-                        mongo.db.files.insert_one(
+                        result = mongo.db.files.insert_one(
                             {"name": _name, "path": _path, "description": _description, "type": _type, "createdOn": _createdOn, "formId": convertedFormId})
                         return response_message.get_success_response("Form inserted suceessfully")
                 except:
@@ -117,7 +115,7 @@ def createfile():
 
         if _name and _path and _description and _type and _createdOn and request.method == "PUT":
 
-            mongo.db.files.insert_one(
+            result = mongo.db.files.insert_one(
                 {"name": _name, "path": _path, "description": _description, "type": _type, "createdOn": _createdOn})
             return response_message.get_success_response("Inserted in files suceessfully")
         else:
@@ -151,7 +149,7 @@ def deletefile(id):
         _fileId = id
 
         if _fileId and request.method == "DELETE":
-            mongo.db.files.delete_one({"_id": ObjectId(_fileId)})
+            result = mongo.db.files.delete_one({"_id": ObjectId(_fileId)})
 
             return response_message.get_success_response("Deleted suceessfully")
         else:
@@ -185,7 +183,7 @@ def user_response():
     try:
         _json = request.json
         _submittedOn = _json['submittedOn']
-        _formId = _json['formId']   
+        _formId = _json['formId']
         _email = _json['email']
         _responseData = _json['responseData']
         _responseGroupId = _json['responseGroupId']
@@ -267,11 +265,9 @@ def add_form():
         _path = _json['path']
         _limitToSingleResponse = _json['limitToSingleResponse']
         _currentGroupId = _json['currentGroupId']
-        _activeEndDate = _json['activeEndDate']
-        _isActive = _json['isActive']
         if _name and _description and _template and _path and _limitToSingleResponse and _currentGroupId and request.method == "POST":
             result = mongo.db.forms.insert_one(
-                {'name': _name, 'description': _description, 'template': _template, 'path': _path, 'limitToSingleResponse': _limitToSingleResponse, 'currentGroupId': _currentGroupId, 'createdOn': None, 'isActive': _isActive, 'activeFromDate': None, 'activeEndDate': _activeEndDate, 'lastModified': None})
+                {'name': _name, 'description': _description, 'template': _template, 'path': _path, 'limitToSingleResponse': _limitToSingleResponse, 'currentGroupId': _currentGroupId, 'createdOn': None, 'isActive': False, 'activeFromDate': None, 'activeEndDate': None, 'lastModified': None})
 
             print(result.__doc__)
 
@@ -327,7 +323,6 @@ def add_test():
     while True:
             schedule.run_pending()
             time.sleep(1)
-        #return response_message.get_failed_response("Failed")
 
 @app.errorhandler(404)
 def not_found(error=None):
