@@ -183,7 +183,7 @@ def user_response():
     try:
         _json = request.json
         _submittedOn = _json['submittedOn']
-        _formId = _json['formId']
+        _formId = _json['formId']   
         _email = _json['email']
         _responseData = _json['responseData']
         _responseGroupId = _json['responseGroupId']
