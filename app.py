@@ -133,7 +133,7 @@ def editfile():
         _editData = _json["editData"]
 
         if _fileId and _editData and request.method == "PUT":
-            result = mongo.db.files.update(
+            result = mongo.db.files.update_one(
                 {"_id": ObjectId(_fileId)}, {"$set": _editData})
             return response_message.get_success_response("Updated suceessfully")
         else:
@@ -292,7 +292,7 @@ def update_form(id):
             return response_message.get_success_response("Updated successfully")
     except Exception as e:
         error_message = str(e)
-        
+
         return response_message.get_failed_response("An error occured "+error_message)
 
 
