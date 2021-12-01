@@ -5,7 +5,7 @@ import json
 from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
 import response_message
-import schedule
+#import schedule
 import time
 from datetime import datetime, date
 
@@ -18,8 +18,8 @@ app = Flask(__name__)
 CORS(app)
 
 app.secret_key = "blinsia"
-# app.config['MONGO_URI'] = "mongodb+srv://spm:spm@spm.hcqrx.mongodb.net/SPM?retryWrites=true&w=majority"
-app.config['MONGO_URI'] = "mongodb://127.0.0.1:27017/spm"
+app.config['MONGO_URI'] = "mongodb+srv://spm:spm@spm.hcqrx.mongodb.net/SPM?retryWrites=true&w=majority"
+#app.config['MONGO_URI'] = "mongodb://127.0.0.1:27017/spm"
 mongo = PyMongo(app)
 # mongodb+srv://spm:spm@spm.hcqrx.mongodb.net/SPM?retryWrites=true&w=majority
 # mongodb://localhost:27017/spm
@@ -144,11 +144,10 @@ def editfile():
         return response_message.get_failed_response("An error occured")
 
 
-@app.route(baseUrl+"/files/delete-file", methods=["DELETE"])
-def deletefile():
+@app.route(baseUrl+"/files/delete-file/<id>", methods=["DELETE"])
+def deletefile(id):
     try:
-        _json = request.json
-        _fileId = _json["id"]
+        _fileId = id
 
         if _fileId and request.method == "DELETE":
             mongo.db.files.delete_one({"_id": ObjectId(_fileId)})
@@ -161,13 +160,13 @@ def deletefile():
         return response_message.get_failed_response("An error occured")
 
 
-@app.route(baseUrl+"/files/retrieve", methods=["GET"])
+@app.route(baseUrl+"/files/retrieve", methods=["POST"])
 def retrieve():
     try:
         _json = request.json
         _path = _json["path"]
 
-        if _path and request.method == "GET":
+        if _path and request.method == "POST":
             result = mongo.db.files.find({"path": _path})
 
             return response_message.get_success_response(json.loads(dumps(result)))
@@ -177,21 +176,21 @@ def retrieve():
         print(e)
         return response_message.get_failed_response("An error occured")
 
+# files End #################################################################################
+
 
 @app.route(baseUrl+"/form/response/add", methods=["POST"])
 def user_response():
     try:
         _json = request.json
         _submittedOn = _json['submittedOn']
-        _formId = _json['formId']
+        _formId = _json['formId']   
         _email = _json['email']
         _responseData = _json['responseData']
         _responseGroupId = _json['responseGroupId']
         if _submittedOn and _formId and _email and _responseData and _responseGroupId and request.method == "POST":
             result = mongo.db.responses.insert_one(
                 {'submittedOn': _submittedOn, 'formId': _formId, 'email': _email, 'responseData': _responseData, 'responseGroupId': _responseGroupId})
-
-            print(result.__doc__)
 
             return response_message.get_success_response("Inserted successfully")
         else:
@@ -245,7 +244,6 @@ def update_response_data(id):
         _json = request.json
         _id = id
         _responseData = _json['responseData']
-# files End #################################################################################
 
         if _id and _responseData and request.method == 'PUT':
             mongo.db.responses.update_one({'_id': ObjectId(_id['$oid']) if'$oid' in _id else ObjectId(
@@ -300,11 +298,10 @@ def update_form(id):
         return response_message.get_failed_response("An error occured "+error_message)
 
 
-@app.route(baseUrl+"/form/retrieve", methods=["GET"])
-def retrieve_form():
+@app.route(baseUrl+"/form/retrieve/<id>", methods=["GET"])
+def retrieve_form(id):
     try:
-        _json = request.json
-        _formId = _json['formId']
+        _formId = id
         if _formId and request.method == "GET":
             form = mongo.db.forms.find_one({'_id': ObjectId(_formId)})
             return response_message.get_success_response(json.loads(dumps(form)))
