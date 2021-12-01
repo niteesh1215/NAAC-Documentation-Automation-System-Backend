@@ -308,22 +308,37 @@ def retrieve_form(id):
         error_message = str(e)
         return response_message.get_failed_response("An error occured "+error_message)
 
+
+@app.route(baseUrl+"/form/retrieve-active", methods=["GET"])
+def retrieve_form():
+    try:
+        _formId = id
+        if _formId and request.method == "GET":
+            form = mongo.db.forms.find({'isActive': True})
+            return response_message.get_success_response(json.loads(dumps(form)))
+
+    except Exception as e:
+        error_message = str(e)
+        return response_message.get_failed_response("An error occured "+error_message)
+
 # forms ###################################################################################
 
 
 @app.route(baseUrl+"/form/add-test", methods=["PUT"])
 def add_test():
     def job():
-        
+
         _today = str(date.today())
         print(_today)
-        mongo.db.forms.update_one({'activeEndDate':_today},{"$set":{'isActive':False}})
+        mongo.db.forms.update_one({'activeEndDate': _today}, {
+                                  "$set": {'isActive': False}})
         return response_message.get_success_response("Updated successfully")
 
     schedule.every().day.at("22:33").do(job)
     while True:
-            schedule.run_pending()
-            time.sleep(1)
+        schedule.run_pending()
+        time.sleep(1)
+
 
 @app.errorhandler(404)
 def not_found(error=None):
