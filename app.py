@@ -310,7 +310,7 @@ def retrieve_form(id):
 
 
 @app.route(baseUrl+"/form/retrieve-active", methods=["GET"])
-def retrieve_form():
+def retrieve_active_form():
     try:
         form = mongo.db.forms.find({'isActive': True})
         return response_message.get_success_response(json.loads(dumps(form)))
