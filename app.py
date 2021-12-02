@@ -185,14 +185,15 @@ def renamefile():
 
         if _fileId and _newName and request.method == "PUT":
             mongo.db.files.update_many(
-                { "path": { "$regex": "/some/path" } },
+                {"path": {"$regex": "/some/path"}},
                 [{
-                    "$set": { "path": {
-                    "$replaceOne": { "input": "$path", "find": "/some/path", "replacement": "some/way" }
-                }}
+                    "$set": {"path": {
+                        "$replaceOne": {"input": "$path", "find": "/some/path", "replacement": "some/way"}
+                    }}
                 }]
             )
-            result = mongo.db.files.update_one({"_id": ObjectId(_fileId)}, {"$set": {"name":_newName}})
+            result = mongo.db.files.update_one({"_id": ObjectId(_fileId)}, {
+                                               "$set": {"name": _newName}})
             return response_message.get_success_response("Updated Successfully")
         else:
             return response_message.get_failed_response("Failed")
@@ -360,7 +361,7 @@ def toggle_is_active():
         _id = _json["_id"]
         _isActive = _json["isActive"]
 
-        if _id and _isActive and request.method == "PUT":
+        if _id and request.method == "PUT":
             result = mongo.db.forms.update_one(
                 {"_id": ObjectId(_id)}, {"$set": {"isActive": _isActive}})
             return response_message.get_success_response("Updated suceessfully")
