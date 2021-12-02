@@ -7,7 +7,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import response_message
 import schedule
 import time
-from datetime import datetime, date
+from datetime import date
 from flask_cors import CORS
 
 baseUrl = "/api/v1"
