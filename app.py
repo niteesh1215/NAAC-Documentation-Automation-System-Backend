@@ -25,11 +25,12 @@ mongo = PyMongo(app)
 # mongodb://localhost:27017/spm
 
 
-UPLOAD_FOLDER = 'temp'
+UPLOAD_FOLDER = 'static'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+#app.config['CUSTOM_STATIC_PATH'] = './temp/'
 
-ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'xlsx', 'doc'])
+ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'xlsx', 'doc', 'docx'])
 
 
 def allowed_file(filename):
@@ -43,7 +44,7 @@ def upload():
         _description = request.values.get("description")
         _path = request.values.get("path")
         _type = request.values.get("type")
-        _createdOn = int(request.values.get("createdOn"))
+        _createdOn = request.values.get("createdOn")
 
         file = request.files['document']
 
@@ -61,7 +62,7 @@ def upload():
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], id_file))
 
             result = mongo.db.files.update_one(
-                {"_id": ObjectId(convertedFormId)}, {"$set": {"path": "temp/"+id_file}})
+                {"_id": ObjectId(convertedFormId)}, {"$set": {"filepath": "static/"+id_file}})
             return response_message.get_success_response("Inserted suceessfully")
 
     except Exception as e:
