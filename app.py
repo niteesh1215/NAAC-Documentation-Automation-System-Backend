@@ -184,14 +184,26 @@ def renamefile():
         _newName = _json["name"]
 
         if _fileId and _newName and request.method == "PUT":
-            mongo.db.files.update_many(
-                { "path": { "$regex": "/some/path" } },
-                [{
-                    "$set": { "path": {
-                    "$replaceOne": { "input": "$path", "find": "/some/path", "replacement": "some/way" }
-                }}
-                }]
-            )
+            mongo.db.files.aggregate([
+              {
+                "$match": {
+                  "path": {
+                    "$regex": "\/some\/path"
+                 }
+                }
+              },
+              {
+                "$set": {
+                  "path": {
+                     "$replaceOne": {
+                      "input": "$path",
+                      "find": "/some/path",
+                      "replacement": "some/way"
+                    }
+                  }
+                }
+              }
+            ])
             result = mongo.db.files.update_one({"_id": ObjectId(_fileId)}, {"$set": {"name":_newName}})
             return response_message.get_success_response("Updated Successfully")
         else:
