@@ -4,12 +4,14 @@ from bson.json_util import default, dumps
 import json
 from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 import response_message
 import schedule
 import time
+import os
 from datetime import date
 from flask_cors import CORS
-
+import urllib.request
 baseUrl = "/api/v1"
 
 app = Flask(__name__)
@@ -18,20 +20,65 @@ CORS(app)
 
 app.secret_key = "blinsia"
 app.config['MONGO_URI'] = "mongodb+srv://spm:spm@spm.hcqrx.mongodb.net/SPM?retryWrites=true&w=majority"
-#app.config['MONGO_URI'] = "mongodb://127.0.0.1:27017/spm"
+# app.config['MONGO_URI'] = "mongodb://127.0.0.1:27017/spm"
 mongo = PyMongo(app)
 # mongodb+srv://spm:spm@spm.hcqrx.mongodb.net/SPM?retryWrites=true&w=majority
 # mongodb://localhost:27017/spm
 
 
-@app.route("/")
+UPLOAD_FOLDER = 'static/img'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
+ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'xlsx', 'doc'])
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@app.route(baseUrl+'/files/upload-file', methods=['POST'])
+def upload():
+    try:
+        _name = request.values.get("name")
+        _description = request.values.get("description")
+        _path = request.values.get("path")
+        _type = request.values.get("type")
+        _createdOn = request.values.get("createdOn")
+
+        file = request.files['document']
+
+        id_file = ""
+        if _name and _description and _path and _type and _createdOn and request.method == "POST":
+            result = mongo.db.files.insert_one(
+                {'name': _name, 'description': _description, 'path': _path, 'type': _type, 'createdOn': _createdOn})
+            txt = file.filename
+            x = txt.split(".")
+            convertedFormId = json.loads(
+                dumps(result.inserted_id))['$oid']
+            id_file = convertedFormId+"."+str(x[-1:][0])
+
+        if file and allowed_file(file.filename):
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], id_file))
+
+            result = mongo.db.files.update_one(
+                {"_id": ObjectId(convertedFormId)}, {"$set": {"path": "static/img/"+id_file}})
+            return response_message.get_success_response("Inserted suceessfully")
+    except Exception as e:
+        print(e)
+        return response_message.get_failed_response("An error occured")
+
+#Upload folder #####################################################################################
+
+
+@ app.route("/")
 def index():
     return "Welcome to NAAC Documentation Automation System"
 
 # register and login start ###################################################################################
 
 
-@app.route(baseUrl+"/auth/register", methods=["POST"])
+@ app.route(baseUrl+"/auth/register", methods=["POST"])
 def register_user():
     try:
         _json = request.json
@@ -55,7 +102,7 @@ def register_user():
             return response_message.get_failed_response("An error occured")
 
 
-@app.route(baseUrl+"/auth/login", methods=["POST"])
+@ app.route(baseUrl+"/auth/login", methods=["POST"])
 def login_user():
     try:
         _json = request.json
@@ -84,7 +131,7 @@ def login_user():
 # files Start #################################################################################
 
 
-@app.route(baseUrl+"/files/create-file", methods=["PUT"])
+@ app.route(baseUrl+"/files/create-file", methods=["PUT"])
 def createfile():
     try:
         _json = request.json
@@ -125,7 +172,7 @@ def createfile():
         return response_message.get_failed_response("An error occured")
 
 
-@app.route(baseUrl+"/files/edit-file", methods=["PUT"])
+@ app.route(baseUrl+"/files/edit-file", methods=["PUT"])
 def editfile():
     try:
         _json = request.json
@@ -143,7 +190,7 @@ def editfile():
         return response_message.get_failed_response("An error occured")
 
 
-@app.route(baseUrl+"/files/delete-file/<id>", methods=["DELETE"])
+@ app.route(baseUrl+"/files/delete-file/<id>", methods=["DELETE"])
 def deletefile(id):
     try:
 
@@ -159,7 +206,7 @@ def deletefile(id):
         return response_message.get_failed_response("An error occured")
 
 
-@app.route(baseUrl+"/files/retrieve", methods=["POST"])
+@ app.route(baseUrl+"/files/retrieve", methods=["POST"])
 def retrieve():
     try:
         _json = request.json
@@ -178,7 +225,7 @@ def retrieve():
 # files End #################################################################################
 
 
-@app.route(baseUrl+"/form/response/add", methods=["POST"])
+@ app.route(baseUrl+"/form/response/add", methods=["POST"])
 def user_response():
     try:
         _json = request.json
@@ -202,7 +249,7 @@ def user_response():
             return response_message.get_failed_response("An error occured")
 
 
-@app.route(baseUrl+"/form/response/retrieve", methods=["GET"])
+@ app.route(baseUrl+"/form/response/retrieve", methods=["GET"])
 def retrieve_response():
     try:
 
@@ -227,7 +274,7 @@ def retrieve_response():
         return response_message.get_failed_response("An error occured "+error_message)
 
 
-@app.route(baseUrl+"/form/response/delete/<id>", methods=["DELETE"])
+@ app.route(baseUrl+"/form/response/delete/<id>", methods=["DELETE"])
 def delete_user_response(id):
     try:
         mongo.db.responses.delete_one({'_id': ObjectId(id)})
@@ -237,7 +284,7 @@ def delete_user_response(id):
         return response_message.get_failed_response("An error occured "+error_message)
 
 
-@app.route(baseUrl+"/form/response/update-response-data/<id>", methods=["PUT"])
+@ app.route(baseUrl+"/form/response/update-response-data/<id>", methods=["PUT"])
 def update_response_data(id):
     try:
         _json = request.json
@@ -255,7 +302,7 @@ def update_response_data(id):
 # form responses ###################################################################################
 
 
-@app.route(baseUrl+"/form/add", methods=["POST"])
+@ app.route(baseUrl+"/form/add", methods=["POST"])
 def add_form():
     try:
         _json = request.json
@@ -282,7 +329,7 @@ def add_form():
             return response_message.get_failed_response("An error occured")
 
 
-@app.route(baseUrl+"/form/update/<id>", methods=["PUT"])
+@ app.route(baseUrl+"/form/update/<id>", methods=["PUT"])
 def update_form(id):
     try:
         _json = request.json
@@ -304,7 +351,7 @@ def update_form(id):
         return response_message.get_failed_response("An error occured "+error_message)
 
 
-@app.route(baseUrl+"/form/retrieve/<id>", methods=["GET"])
+@ app.route(baseUrl+"/form/retrieve/<id>", methods=["GET"])
 def retrieve_form(id):
     try:
         _formId = id
@@ -317,7 +364,7 @@ def retrieve_form(id):
         return response_message.get_failed_response("An error occured "+error_message)
 
 
-@app.route(baseUrl+"/form/retrieve-active", methods=["GET"])
+@ app.route(baseUrl+"/form/retrieve-active", methods=["GET"])
 def retrieve_active_form():
     try:
         form = mongo.db.forms.find({'isActive': True})
@@ -330,7 +377,7 @@ def retrieve_active_form():
 # forms ###################################################################################
 
 
-@app.route(baseUrl+"/form/add-test", methods=["PUT"])
+@ app.route(baseUrl+"/form/add-test", methods=["PUT"])
 def add_test():
     def job():
 
@@ -346,7 +393,7 @@ def add_test():
         time.sleep(1)
 
 
-@app.errorhandler(404)
+@ app.errorhandler(404)
 def not_found(error=None):
     return response_message.get_failed_response("Not found" + request.url, status_code=404)
 
