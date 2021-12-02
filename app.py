@@ -287,21 +287,21 @@ def user_response():
             return response_message.get_failed_response("An error occured")
 
 
-@ app.route(baseUrl+"/form/response/retrieve", methods=["GET"])
+@ app.route(baseUrl+"/form/response/retrieve", methods=["POST"])
 def retrieve_response():
     try:
 
         _json = request.json
         _formId = _json['formId']
         _responseGroupId = _json['responseGroupId']
-        if _formId and _responseGroupId and request.method == "GET":
+        if _formId and _responseGroupId and request.method == "POST":
             form = mongo.db.responses.find(
                 {'formId': _formId, 'responseGroupId': _responseGroupId})
             return response_message.get_success_response(json.loads(dumps(form)))
-        elif _formId and request.method == "GET":
+        elif _formId and request.method == "POST":
             form = mongo.db.responses.find({'formId': _formId})
             return response_message.get_success_response(json.loads(dumps(form)))
-        elif _responseGroupId and request.method == "GET":
+        elif _responseGroupId and request.method == "POST":
             form = mongo.db.responses.find(
                 {'responseGroupId': _responseGroupId})
             return response_message.get_success_response(json.loads(dumps(form)))
