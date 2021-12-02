@@ -4,7 +4,6 @@ from bson.json_util import default, dumps
 import json
 from bson.objectid import ObjectId
 from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
 import response_message
 import schedule
 import time
