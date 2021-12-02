@@ -44,7 +44,7 @@ def upload():
         _description = request.values.get("description")
         _path = request.values.get("path")
         _type = request.values.get("type")
-        _createdOn = request.values.get("createdOn")
+        _createdOn = int(request.values.get("createdOn"))
 
         file = request.files['document']
 
