@@ -31,7 +31,7 @@ def index():
 # register and login start ###################################################################################
 
 
-@app.route(baseUrl+"/auth/register/", methods=["POST"])
+@app.route(baseUrl+"/auth/register", methods=["POST"])
 def register_user():
     try:
         _json = request.json
@@ -146,11 +146,11 @@ def editfile():
 @app.route(baseUrl+"/files/delete-file/<id>", methods=["DELETE"])
 def deletefile(id):
     try:
-        _fileId = id
 
-        if _fileId and request.method == "DELETE":
-            result = mongo.db.files.delete_one({"_id": ObjectId(_fileId)})
-
+        if id and request.method == "DELETE":
+            result = mongo.db.files.find_one({"_id": ObjectId(id)})
+            mongo.db.files.delete_one({"_id": ObjectId(id)})
+            mongo.db.forms.delete_one({'_id': ObjectId(result['formId'])})
             return response_message.get_success_response("Deleted suceessfully")
         else:
             return response_message.get_failed_response("Failed")
@@ -285,14 +285,22 @@ def add_form():
 @app.route(baseUrl+"/form/update/<id>", methods=["PUT"])
 def update_form(id):
     try:
-        _id = id
-        if _id and request.method == 'PUT':
-            mongo.db.forms.update_one({'_id': ObjectId(_id['$oid']) if'$oid' in _id else ObjectId(
-                _id)}, {'$set': request.json})
+        _json = request.json
+        _json.pop('_id')
+
+        if id and request.method == 'PUT':
+            mongo.db.forms.update_one({'_id': ObjectId(id['$oid']) if'$oid' in id else ObjectId(
+                id)}, {'$set': request.json})
+
+            mongo.db.files.update_one({"formId": id['$oid'] if'$oid' in id else
+                                       id}, {"$set": {
+                                           'name': _json['name'],
+                                           'description': _json['description'],
+                                       }})
             return response_message.get_success_response("Updated successfully")
+
     except Exception as e:
         error_message = str(e)
-
         return response_message.get_failed_response("An error occured "+error_message)
 
 
