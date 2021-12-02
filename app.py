@@ -26,7 +26,7 @@ mongo = PyMongo(app)
 # mongodb://localhost:27017/spm
 
 
-UPLOAD_FOLDER = 'static/img'
+UPLOAD_FOLDER = 'temp'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
@@ -62,9 +62,9 @@ def upload():
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], id_file))
 
             result = mongo.db.files.update_one(
-                {"_id": ObjectId(convertedFormId)}, {"$set": {"path": "static/img/"+id_file}})
+                {"_id": ObjectId(convertedFormId)}, {"$set": {"path": "temp/"+id_file}})
             return response_message.get_success_response("Inserted suceessfully")
-            
+
     except Exception as e:
         print(e)
         return response_message.get_failed_response("An error occured")
