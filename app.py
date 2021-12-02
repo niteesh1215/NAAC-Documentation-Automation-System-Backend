@@ -64,6 +64,7 @@ def upload():
             result = mongo.db.files.update_one(
                 {"_id": ObjectId(convertedFormId)}, {"$set": {"path": "static/img/"+id_file}})
             return response_message.get_success_response("Inserted suceessfully")
+            
     except Exception as e:
         print(e)
         return response_message.get_failed_response("An error occured")
@@ -232,26 +233,27 @@ def renamefile():
 
         if _fileId and _newName and request.method == "PUT":
             mongo.db.files.aggregate([
-              {
-                "$match": {
-                  "path": {
-                    "$regex": "\/some\/path"
-                 }
-                }
-              },
-              {
-                "$set": {
-                  "path": {
-                     "$replaceOne": {
-                      "input": "$path",
-                      "find": "/some/path",
-                      "replacement": "some/way"
+                {
+                    "$match": {
+                        "path": {
+                            "$regex": "\/some\/path"
+                        }
                     }
-                  }
+                },
+                {
+                    "$set": {
+                        "path": {
+                            "$replaceOne": {
+                                "input": "$path",
+                                "find": "/some/path",
+                                "replacement": "some/way"
+                            }
+                        }
+                    }
                 }
-              }
             ])
-            result = mongo.db.files.update_one({"_id": ObjectId(_fileId)}, {"$set": {"name":_newName}})
+            result = mongo.db.files.update_one({"_id": ObjectId(_fileId)}, {
+                                               "$set": {"name": _newName}})
             return response_message.get_success_response("Updated Successfully")
         else:
             return response_message.get_failed_response("Failed")
