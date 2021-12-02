@@ -222,6 +222,43 @@ def retrieve():
         print(e)
         return response_message.get_failed_response("An error occured")
 
+
+@app.route(baseUrl+"/files/rename-file", methods=["PUT"])
+def renamefile():
+    try:
+        _json = request.json
+        _fileId = _json["id"]
+        _newName = _json["name"]
+
+        if _fileId and _newName and request.method == "PUT":
+            mongo.db.files.aggregate([
+              {
+                "$match": {
+                  "path": {
+                    "$regex": "\/some\/path"
+                 }
+                }
+              },
+              {
+                "$set": {
+                  "path": {
+                     "$replaceOne": {
+                      "input": "$path",
+                      "find": "/some/path",
+                      "replacement": "some/way"
+                    }
+                  }
+                }
+              }
+            ])
+            result = mongo.db.files.update_one({"_id": ObjectId(_fileId)}, {"$set": {"name":_newName}})
+            return response_message.get_success_response("Updated Successfully")
+        else:
+            return response_message.get_failed_response("Failed")
+    except Exception as e:
+        print(e)
+        return response_message.get_failed_response("An error occured")
+
 # files End #################################################################################
 
 
@@ -373,6 +410,25 @@ def retrieve_active_form():
     except Exception as e:
         error_message = str(e)
         return response_message.get_failed_response("An error occured "+error_message)
+
+
+@app.route(baseUrl+"/form/toggle-is-active", methods=["PUT"])
+def toggle_is_active():
+    try:
+        _json = request.json
+        _id = _json["_id"]
+        _isActive = _json["isActive"]
+
+        if _id and request.method == "PUT":
+            result = mongo.db.forms.update_one(
+                {"_id": ObjectId(_id)}, {"$set": {"isActive": _isActive}})
+            return response_message.get_success_response("Updated suceessfully")
+        else:
+            return response_message.get_failed_response("Failed")
+    except Exception as e:
+        print(e)
+        return response_message.get_failed_response("An error occured")
+
 
 # forms ###################################################################################
 
