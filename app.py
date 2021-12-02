@@ -104,18 +104,18 @@ def createfile():
                     convertedFormId = json.loads(
                         dumps(formId.inserted_id))['$oid']
                     if _name and _path and _description and _type and _createdOn and formId and request.method == "PUT":
-                        result = mongo.db.files.insert_one(
+                        mongo.db.files.insert_one(
                             {"name": _name, "path": _path, "description": _description, "type": _type, "createdOn": _createdOn, "formId": convertedFormId})
                         return response_message.get_success_response("Form inserted suceessfully")
                 except:
-                    result = mongo.db.forms.delete_one({"_id": formId})
+                    mongo.db.forms.delete_one({"_id": formId})
                     return response_message.get_failed_response("Error while inserting form")
             else:
                 return response_message.get_failed_response("Failed in inserting form")
 
         if _name and _path and _description and _type and _createdOn and request.method == "PUT":
 
-            result = mongo.db.files.insert_one(
+            mongo.db.files.insert_one(
                 {"name": _name, "path": _path, "description": _description, "type": _type, "createdOn": _createdOn})
             return response_message.get_success_response("Inserted in files suceessfully")
         else:
