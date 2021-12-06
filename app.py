@@ -18,11 +18,10 @@ app = Flask(__name__)
 CORS(app)
 
 app.secret_key = "blinsia"
-app.config['MONGO_URI'] = "mongodb+srv://spm:spm@spm.hcqrx.mongodb.net/SPM?retryWrites=true&w=majority"
+app.config['MONGO_URI'] = uri
 # app.config['MONGO_URI'] = "mongodb://127.0.0.1:27017/spm"
 mongo = PyMongo(app)
-# mongodb+srv://spm:spm@spm.hcqrx.mongodb.net/SPM?retryWrites=true&w=majority
-# mongodb://localhost:27017/spm
+
 
 
 UPLOAD_FOLDER = 'static'
